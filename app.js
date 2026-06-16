@@ -68,8 +68,41 @@ function validateRequest(request) {
 }
 
 function analyzeWithLocalAi(request) {
-  const text = `${request.subject} ${request.description} ${request.affectedService}`.toLowerCase();
+  const text = `${request.subject} ${request.description} ${request.affectedService} ${request.category}`.toLowerCase();
   const critical = request.priority === "alta" || request.priority === "critica";
+
+  if (
+    text.includes("word") ||
+    text.includes("excel") ||
+    text.includes("powerpoint") ||
+    text.includes("outlook") ||
+    text.includes("office") ||
+    text.includes("microsoft 365")
+  ) {
+    const product = text.includes("word")
+      ? "Word"
+      : text.includes("excel")
+        ? "Excel"
+        : text.includes("powerpoint")
+          ? "PowerPoint"
+          : text.includes("outlook")
+            ? "Outlook"
+            : "Microsoft 365";
+
+    return {
+      summary: `La richiesta riguarda ${product} o un'applicazione Microsoft 365 che non si avvia correttamente.`,
+      probableCause: "Possibile componente aggiuntivo difettoso, profilo utente corrotto, aggiornamento incompleto o file temporanei/cache danneggiati.",
+      suggestedSteps: [
+        `Chiudi completamente ${product} e verifica dal Task Manager che non restino processi aperti.`,
+        `Prova ad avviare ${product} in modalita provvisoria. Per Word puoi usare Win + R e digitare: winword /safe.`,
+        "Se si apre in modalita provvisoria, disattiva i componenti aggiuntivi e riavvia normalmente.",
+        "Esegui una riparazione di Microsoft 365 da Impostazioni > App > Microsoft 365 > Modifica > Ripristino rapido.",
+        "Se il problema continua, invia la richiesta al supporto includendo eventuali messaggi di errore."
+      ],
+      confidence: "alta",
+      ticketRecommended: true
+    };
+  }
 
   if (text.includes("password") || text.includes("accesso") || text.includes("login")) {
     return {
