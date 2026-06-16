@@ -1,4 +1,24 @@
 const SUPPORT_EMAIL = "a2x@hotmail.it";
+// =============================
+// ✅ AI REALE (backend Vercel)
+// =============================
+async function callRealAi(request) {
+  const response = await fetch("https://helpme-da-c2yvk6lne-xela-s-projects1.vercel.app/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: JSON.stringify(request)
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error("Errore chiamata API");
+  }
+
+  return await response.json();
+}
 const STORAGE_KEY = "help-me-da-web-requests";
 
 const form = document.querySelector("#request-form");
@@ -300,7 +320,7 @@ function renderHistory() {
   });
 }
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const request = collectFormData();
   const error = validateRequest(request);
@@ -312,15 +332,23 @@ form.addEventListener("submit", (event) => {
   }
 
   formError.hidden = true;
-  const record = {
-    id: `HMW-${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    request,
-    ai: analyzeWithLocalAi(request),
-    outcome: "pending_user_confirmation"
-  };
+  let ai;
 
+try {
+  ai = await callRealAi(request);
+} catch (error) {
+  console.error("Errore AI, uso fallback locale:", error);
+  ai = analyzeWithLocalAi(request);
+}
+
+const record = {
+  id: `HMW-${Date.now()}`,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  request,
+  ai,
+  outcome: "pending_user_confirmation"
+};
   const requests = getRequests();
   requests.push(record);
   saveRequests(requests);
