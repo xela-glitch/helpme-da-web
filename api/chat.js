@@ -26,7 +26,20 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: "Sei un help desk IT e rispondi in JSON."
+            content: `
+Sei un tecnico help desk IT.
+
+Devi rispondere SOLO con JSON valido (senza markdown, senza ```).
+
+Formato:
+{
+  "summary": "",
+  "probableCause": "",
+  "suggestedSteps": ["", ""],
+  "confidence": "bassa/media/alta",
+  "ticketRecommended": true
+}
+`
           },
           {
             role: "user",
@@ -37,13 +50,16 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-    const text = data.choices[0].message.content;
+
+    console.log("OpenAI response:", data);
+
+    const text = data?.choices?.[0]?.message?.content || "";
 
     let parsed;
 
     try {
       parsed = JSON.parse(text);
-    } catch {
+    } catch (e) {
       parsed = {
         summary: text,
         probableCause: "Non determinato",
@@ -56,6 +72,7 @@ export default async function handler(req, res) {
     return res.status(200).json(parsed);
 
   } catch (error) {
+    console.error("Errore backend:", error);
     return res.status(500).json({ error: "Errore server" });
   }
 }
