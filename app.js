@@ -436,3 +436,67 @@ clearHistoryButton.addEventListener("click", () => {
 
 renderStats();
 renderHistory();
+let messages = [];
+
+document.getElementById("send-btn").addEventListener("click", sendMessage);
+
+document.getElementById("chat-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  addMessage("user", text);
+  messages.push({ role: "user", content: text });
+
+  input.value = "";
+
+  const loading = addMessage("ai", "Scrivendo...");
+
+  try {
+    const response = await fetch("https://helpme-da-web.vercel.app/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: messages })
+    });
+
+    const data = await response.json();
+
+    const reply = data.summary || "Nessuna risposta";
+
+    updateMessage(loading, reply);
+
+    messages.push({ role: "assistant", content: reply });
+
+  } catch (error) {
+    updateMessage(loading, "Errore nella risposta");
+  }
+}
+
+function addMessage(role, text) {
+  const chatBox = document.getElementById("chat-box");
+
+  const msg = document.createElement("div");
+  msg.className = `msg ${role}`;
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble";
+  bubble.innerText = text;
+
+  msg.appendChild(bubble);
+  chatBox.appendChild(msg);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  return bubble;
+}
+
+function updateMessage(element, text) {
+  element.innerText = text;
+}
