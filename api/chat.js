@@ -15,26 +15,31 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    // ✅ FIX CHAT (supporta array di messaggi)
+    // ✅ SUPPORTO CHAT
     const messages = Array.isArray(message)
       ? message
       : [{ role: "user", content: message }];
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `
+    // ✅ CALL OPENAI SICURA
+    let rawText;
+    let data;
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: `
 Sei un assistente IT esperto.
 
-Rispondi SEMPRE in JSON valido, senza markdown.
+Rispondi SEMPRE in JSON valido (senza markdown).
 
 Formato:
 {
@@ -45,50 +50,36 @@ Formato:
   "ticketRecommended": true
 }
 `
-          },
-          ...messages  // ✅ QUI PASSIAMO LA CHAT COMPLETA
-        ]
-      })
-    });
+            },
+            ...messages
+          ]
+        })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Errore OpenAI:", errorText);
+      // ✅ leggo SEMPRE testo grezzo
+      rawText = await response.text();
+      console.log("🔎 RAW RESPONSE:", rawText);
+
+      // ✅ provo parse JSON OpenAI
+      try {
+        data = JSON.parse(rawText);
+      } catch (e) {
+        console.error("❌ risposta OpenAI non JSON valida");
+
+        return res.status(200).json({
+          summary: "Errore nella risposta AI.",
+          probableCause: "Output OpenAI non valido",
+          suggestedSteps: ["Riprovare"],
+          confidence: "bassa",
+          ticketRecommended: true
+        });
+      }
+
+    } catch (err) {
+      console.error("❌ ERRORE CHIAMATA OPENAI:", err);
 
       return res.status(200).json({
-        summary: "Errore nella risposta AI.",
-        probableCause: errorText,
-        suggestedSteps: ["Riprovare tra qualche minuto"],
+        summary: "Errore server AI.",
+        probableCause: err.message,
+        suggestedSteps: ["Riprovare tra poco"],
         confidence: "bassa",
-        ticketRecommended: true
-      });
-    }
-
-    const data = await response.json();
-    console.log("✅ OpenAI RAW:", data);
-
-    const text = data?.choices?.[0]?.message?.content || "";
-
-    let parsed;
-
-    try {
-      parsed = JSON.parse(text);
-    } catch (e) {
-      console.warn("⚠️ JSON non valido, uso fallback", text);
-
-      parsed = {
-        summary: text,
-        probableCause: "Non determinato",
-        suggestedSteps: ["Verifica manuale"],
-        confidence: "bassa",
-        ticketRecommended: true
-      };
-    }
-
-    return res.status(200).json(parsed);
-
-  } catch (error) {
-    console.error("❌ Errore backend:", error);
-
-    return res.status(200).json({
-      summary: "Errore durante l'elaborazione.",
