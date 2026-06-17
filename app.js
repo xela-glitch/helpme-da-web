@@ -335,7 +335,17 @@ form.addEventListener("submit", async (event) => {
   let ai;
 
 try {
-  ai = await callRealAi(request);
+  const response = await callRealAi(request);
+
+  console.log("Risposta AI:", response);
+
+  // ✅ verifica che sia valida
+  if (!response || !response.summary) {
+    throw new Error("Risposta AI non valida");
+  }
+
+  ai = response;
+
 } catch (error) {
   console.error("Errore AI, uso fallback locale:", error);
   ai = analyzeWithLocalAi(request);
