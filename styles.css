@@ -338,3 +338,69 @@ button.success {
     white-space: normal;
   }
 }
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.chat-box {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  background: #f7f7f8;
+}
+
+.msg {
+  display: flex;
+  margin: 10px 0;
+}
+
+.msg.user {
+  justify-content: flex-end;
+}
+
+.msg.ai {
+  justify-content: flex-start;
+}
+
+.msg-bubble {
+  max-width: 70%;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.msg.user .msg-bubble {
+  background: #0078d4;
+  color: white;
+}
+
+.msg.ai .msg-bubble {
+  background: white;
+  border: 1px solid #ddd;
+}
+
+.chat-input-container {
+  display: flex;
+  border-top: 1px solid #ddd;
+  background: white;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  outline: none;
+}
+
+#send-btn {
+  background: #0078d4;
+  color: white;
+  border: none;
+  padding: 0 20px;
+  cursor: pointer;
+}
+``
