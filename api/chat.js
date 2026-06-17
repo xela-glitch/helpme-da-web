@@ -15,71 +15,99 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
-    // ✅ SUPPORTO CHAT
-    const messages = Array.isArray(message)
-      ? message
-      : [{ role: "user", content: message }];
+    // ✅ NORMALIZZA MESSAGGI (importantissimo)
+    let messages = [];
 
-    // ✅ CALL OPENAI SICURA
-    let rawText;
-    let data;
+    if (Array.isArray(message)) {
+      messages = message.map(m => ({
+        role: m.role || "user",
+        content: String(m.content || "")
+      }));
+    } else {
+      messages = [
+        {
+          role: "user",
+          content: String(message || "")
+        }
+      ];
+    }
 
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `
-Sei un assistente IT esperto.
+    // ✅ CHIAMATA OPENAI SICURA
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `
+Sei un assistente IT.
 
-Rispondi SEMPRE in JSON valido (senza markdown).
+Rispondi SOLO con JSON valido:
 
-Formato:
 {
   "summary": "",
   "probableCause": "",
   "suggestedSteps": ["", ""],
-  "confidence": "bassa/media/alta",
+  "confidence": "",
   "ticketRecommended": true
 }
 `
-            },
-            ...messages
-          ]
-        })
-      });
+          },
+          ...messages
+        ]
+      })
+    });
 
-      // ✅ leggo SEMPRE testo grezzo
-      rawText = await response.text();
-      console.log("🔎 RAW RESPONSE:", rawText);
+    // ✅ controlla risposta
+    const raw = await response.text();
+    console.log("RAW:", raw);
 
-      // ✅ provo parse JSON OpenAI
-      try {
-        data = JSON.parse(rawText);
-      } catch (e) {
-        console.error("❌ risposta OpenAI non JSON valida");
+    let data;
 
-        return res.status(200).json({
-          summary: "Errore nella risposta AI.",
-          probableCause: "Output OpenAI non valido",
-          suggestedSteps: ["Riprovare"],
-          confidence: "bassa",
-          ticketRecommended: true
-        });
-      }
-
-    } catch (err) {
-      console.error("❌ ERRORE CHIAMATA OPENAI:", err);
-
+    try {
+      data = JSON.parse(raw);
+    } catch {
       return res.status(200).json({
-        summary: "Errore server AI.",
-        probableCause: err.message,
-        suggestedSteps: ["Riprovare tra poco"],
+        summary: "Errore nella risposta AI.",
+        probableCause: "Formato non valido",
+        suggestedSteps: ["Riprovare"],
         confidence: "bassa",
+        ticketRecommended: true
+      });
+    }
+
+    const content = data?.choices?.[0]?.message?.content || "";
+
+    let parsed;
+
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      parsed = {
+        summary: content,
+        probableCause: "Non determinato",
+        suggestedSteps: ["Verifica manuale"],
+        confidence: "bassa",
+        ticketRecommended: true
+      };
+    }
+
+    return res.status(200).json(parsed);
+
+  } catch (error) {
+    console.error("Errore backend:", error);
+
+    return res.status(200).json({
+      summary: "Errore server.",
+      probableCause: error.message,
+      suggestedSteps: ["Riprovare"],
+      confidence: "bassa",
+      ticketRecommended: true
+    });
+  }
+}
