@@ -27,9 +27,9 @@ export default async function handler(req, res) {
           {
             role: "system",
             content: `
-Sei un tecnico help desk IT.
+Sei un tecnico IT help desk.
 
-Devi rispondere SOLO con JSON valido (senza markdown, senza ```).
+Rispondi SEMPRE in JSON valido, senza markdown.
 
 Formato:
 {
@@ -49,9 +49,21 @@ Formato:
       })
     });
 
-    const data = await response.json();
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Errore OpenAI:", errorText);
 
-    console.log("OpenAI response:", data);
+      return res.status(200).json({
+        summary: "Errore nella risposta AI.",
+        probableCause: errorText,
+        suggestedSteps: ["Riprovare tra qualche minuto"],
+        confidence: "bassa",
+        ticketRecommended: true
+      });
+    }
+
+    const data = await response.json();
+    console.log("OpenAI RAW:", data);
 
     const text = data?.choices?.[0]?.message?.content || "";
 
@@ -59,7 +71,7 @@ Formato:
 
     try {
       parsed = JSON.parse(text);
-    } catch (e) {
+    } catch {
       parsed = {
         summary: text,
         probableCause: "Non determinato",
@@ -72,18 +84,16 @@ Formato:
     return res.status(200).json(parsed);
 
   } catch (error) {
-  console.error("Errore backend:", error);
+    console.error("Errore backend:", error);
 
-  return res.status(200).json({
-    summary: "Errore durante l'analisi AI.",
-    probableCause: "Il servizio AI non ha risposto correttamente.",
-    suggestedSteps: [
-      "Riprovare tra qualche minuto",
-      "Verificare connessione internet",
-      "Contattare supporto se il problema persiste"
-    ],
-    confidence: "bassa",
-    ticketRecommended: true
-  });
+    return res.status(200).json({
+      summary: "Errore durante l'elaborazione.",
+      probableCause: error.message,
+      suggestedSteps: ["Riprovare"],
+      confidence: "bassa",
+      ticketRecommended: true
+    });
+  }
 }
+``
 
