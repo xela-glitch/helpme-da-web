@@ -50,7 +50,18 @@ async function sendMessage() {
 
     console.log("✅ Risposta AI:", data);
 
-    const reply = data.summary || "Nessuna risposta";
+    const reply = `
+🧠 ${data.summary}
+
+🔍 Possibile causa:
+${data.probableCause}
+
+🛠️ Passaggi suggeriti:
+${data.suggestedSteps?.join("\n- ")}
+
+📊 Attendibilità: ${data.confidence}
+`;
+
 
     // aggiorno messaggio
     updateMessage(loading, reply);
