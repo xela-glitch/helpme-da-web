@@ -7,162 +7,47 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <a class="skip-link" href="#main">Salta al contenuto principale</a>
-
     <header class="app-header">
       <div>
         <p class="eyebrow">Assistenza digitale</p>
         <h1>Help-Me DA Vers. web</h1>
-        <p class="header-copy">Analizza il problema, propone una soluzione e prepara l'invio e-mail solo se serve supporto umano.</p>
+        <p class="header-copy">
+          Chat intelligente per assistenza IT.
+        </p>
       </div>
-      <div class="status-pill" aria-label="Destinatario segnalazioni e-mail">
-        <span aria-hidden="true">@</span>
+      <div class="status-pill">
+        <span>@</span>
         <span>a2x@hotmail.it</span>
       </div>
     </header>
 
-    <main id="main" class="app-shell">
-      <section class="workspace" aria-labelledby="request-title">
-        <div class="panel request-panel">
+    <main class="app-shell">
+
+      <!-- 🔥 CHAT -->
+      <section class="workspace">
+        <div class="panel result-panel">
+
           <div class="section-heading">
-            <p class="eyebrow">Nuova richiesta</p>
-            <h2 id="request-title">Descrivi il problema</h2>
+            <p class="eyebrow">Chat AI</p>
+            <h2>Assistente IT</h2>
           </div>
 
-          <form id="request-form" novalidate>
-            <div class="field-grid">
-              <label>
-                Nome e cognome
-                <input id="requesterName" name="requesterName" autocomplete="name" required minlength="2">
-              </label>
+          <div class="chat-container">
 
-              <label>
-                E-mail
-                <input id="requesterEmail" name="requesterEmail" type="email" autocomplete="email" required>
-              </label>
+            <!-- messaggi -->
+            <div id="chat-box" class="chat-box"></div>
 
-              <label>
-                Categoria
-                <select id="category" name="category" required>
-                  <option value="">Seleziona</option>
-                  <option value="accesso">Accesso</option>
-                  <option value="hardware">Hardware</option>
-                  <option value="software">Software</option>
-                  <option value="rete">Rete</option>
-                  <option value="applicativo">Applicativo</option>
-                  <option value="altro">Altro</option>
-                </select>
-              </label>
-
-              <label>
-                Priorita
-                <select id="priority" name="priority" required>
-                  <option value="bassa">Bassa</option>
-                  <option value="media" selected>Media</option>
-                  <option value="alta">Alta</option>
-                  <option value="critica">Critica</option>
-                </select>
-              </label>
+            <!-- input -->
+            <div class="chat-input-container">
+              <input id="chat-input" placeholder="Descrivi il tuo problema IT..." />
+              <button id="send-btn">Invia</button>
             </div>
 
-            <label>
-              Oggetto
-              <input id="subject" name="subject" required minlength="3" maxlength="120">
-            </label>
-
-            <label>
-              Descrizione
-              <textarea id="description" name="description" required minlength="10" maxlength="2000" rows="7"></textarea>
-            </label>
-
-            <label>
-              Servizio o applicazione coinvolta
-              <input id="affectedService" name="affectedService" maxlength="120">
-            </label>
-
-            <div id="form-error" class="alert" role="alert" hidden></div>
-
-            <div class="actions">
-              <button class="primary" type="submit">Analizza con AI</button>
-              <button class="secondary" type="reset">Pulisci</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="panel result-panel" aria-labelledby="analysis-title">
-          <div class="section-heading">
-            <p class="eyebrow">Analisi</p>
-            <h2 id="analysis-title">Risultato AI</h2>
           </div>
 
-          <div id="empty-state" class="empty-state">
-            <p>Compila il modulo per ricevere una proposta di risoluzione.</p>
-          </div>
-
-          <article id="analysis-result" class="analysis-result" hidden aria-live="polite">
-            <p class="request-id" id="request-id"></p>
-            <h3 id="summary"></h3>
-            <p><strong>Possibile causa:</strong> <span id="probable-cause"></span></p>
-            <div>
-              <strong>Passaggi suggeriti:</strong>
-              <ol id="suggested-steps"></ol>
-            </div>
-            <p><strong>Attendibilita:</strong> <span id="confidence"></span></p>
-            <p id="recommendation"></p>
-
-            <div class="actions">
-              <button id="mark-resolved" class="success" type="button">Problema risolto con AI</button>
-              <button id="send-email" class="primary" type="button">Invia richiesta di assistenza</button>
-            </div>
-
-            <div id="email-fallback" class="email-fallback" hidden>
-              <h4>Invio automatico non configurato</h4>
-              <p id="email-fallback-message"></p>
-              <div class="actions">
-                <a id="outlook-link" class="button-link primary" target="_blank" rel="noreferrer">Apri in Outlook Web</a>
-                <a id="mailto-link" class="button-link secondary">Apri app e-mail</a>
-                <button id="copy-email" class="secondary" type="button">Copia testo</button>
-              </div>
-              <label>
-                Testo della richiesta
-                <textarea id="email-body-preview" rows="10" readonly></textarea>
-              </label>
-            </div>
-          </article>
         </div>
       </section>
 
-      <section class="dashboard" aria-labelledby="stats-title">
-        <div class="section-heading">
-          <p class="eyebrow">Monitoraggio</p>
-          <h2 id="stats-title">Richieste gestite</h2>
-        </div>
-
-        <div class="stats-grid" aria-live="polite">
-          <div class="stat">
-            <span id="stat-total">0</span>
-            <p>Totali</p>
-          </div>
-          <div class="stat">
-            <span id="stat-ai">0</span>
-            <p>Risolte con AI</p>
-          </div>
-          <div class="stat">
-            <span id="stat-email">0</span>
-            <p>Inviate via e-mail</p>
-          </div>
-          <div class="stat">
-            <span id="stat-pending">0</span>
-            <p>In attesa</p>
-          </div>
-        </div>
-
-        <div class="history-header">
-          <h3>Storico locale</h3>
-          <button id="clear-history" class="secondary" type="button">Svuota storico</button>
-        </div>
-        <div id="history-list" class="history-list"></div>
-      </section>
     </main>
 
     <script src="app.js"></script>
