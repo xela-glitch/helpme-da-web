@@ -3,7 +3,7 @@ const SUPPORT_EMAIL = "a2x@hotmail.it";
 // ✅ AI REALE (backend Vercel)
 // =============================
 async function callRealAi(request) {
-  const response = await fetch("https://helpme-da-c2yvk6lne-xela-s-projects1.vercel.app/api/chat", {
+  const response = await fetch("https://helpme-da-web.vercel.app/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
