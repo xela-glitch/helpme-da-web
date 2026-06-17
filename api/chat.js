@@ -15,6 +15,11 @@ export default async function handler(req, res) {
   try {
     const { message } = req.body;
 
+    // ✅ FIX CHAT (supporta array di messaggi)
+    const messages = Array.isArray(message)
+      ? message
+      : [{ role: "user", content: message }];
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -27,7 +32,7 @@ export default async function handler(req, res) {
           {
             role: "system",
             content: `
-Sei un tecnico IT help desk.
+Sei un assistente IT esperto.
 
 Rispondi SEMPRE in JSON valido, senza markdown.
 
@@ -41,10 +46,7 @@ Formato:
 }
 `
           },
-          {
-            role: "user",
-            content: message
-          }
+          ...messages  // ✅ QUI PASSIAMO LA CHAT COMPLETA
         ]
       })
     });
@@ -63,7 +65,7 @@ Formato:
     }
 
     const data = await response.json();
-    console.log("OpenAI RAW:", data);
+    console.log("✅ OpenAI RAW:", data);
 
     const text = data?.choices?.[0]?.message?.content || "";
 
@@ -71,7 +73,9 @@ Formato:
 
     try {
       parsed = JSON.parse(text);
-    } catch {
+    } catch (e) {
+      console.warn("⚠️ JSON non valido, uso fallback", text);
+
       parsed = {
         summary: text,
         probableCause: "Non determinato",
@@ -84,16 +88,7 @@ Formato:
     return res.status(200).json(parsed);
 
   } catch (error) {
-    console.error("Errore backend:", error);
+    console.error("❌ Errore backend:", error);
 
     return res.status(200).json({
       summary: "Errore durante l'elaborazione.",
-      probableCause: error.message,
-      suggestedSteps: ["Riprovare"],
-      confidence: "bassa",
-      ticketRecommended: true
-    });
-  }
-}
-``
-
