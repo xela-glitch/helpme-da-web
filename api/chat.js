@@ -72,7 +72,18 @@ Formato:
     return res.status(200).json(parsed);
 
   } catch (error) {
-    console.error("Errore backend:", error);
-    return res.status(500).json({ error: "Errore server" });
-  }
+  console.error("Errore backend:", error);
+
+  return res.status(200).json({
+    summary: "Errore durante l'analisi AI.",
+    probableCause: "Il servizio AI non ha risposto correttamente.",
+    suggestedSteps: [
+      "Riprovare tra qualche minuto",
+      "Verificare connessione internet",
+      "Contattare supporto se il problema persiste"
+    ],
+    confidence: "bassa",
+    ticketRecommended: true
+  });
 }
+
